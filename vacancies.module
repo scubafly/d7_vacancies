@@ -1,0 +1,187 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * A module to display vacancies.
+ */
+
+drupal_add_js(drupal_get_path('module','vacancies') . '/color.js', 'file');
+drupal_add_css(drupal_get_path('module', 'vacancies'). '/vacancies.css', 'file');
+
+define('VACANCIES_BODY_LENGHT',200);
+
+/** 
+ * Implements hook_entity_info_alter().
+ */
+function vacancies_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['vacancy_teaser'] = array(
+    'label' => t('vacancy teaser'),
+    'custom settings' => TRUE,
+  );
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function vacancies_preprocess_node(&$vars) {
+  if ($vars['view_mode'] == 'vacancy_teaser') {
+    $vars['theme_hook_suggestions'][] = 'node__vacature__vacancy_teaser';
+  }
+  $node = $vars['node'];
+  $vars['body_teaser'] = str_replace( '&nbsp;' , ' ' , substr( strip_tags( $node->body['und'][0]['value'] ) , 0 , VACANCIES_BODY_LENGHT ) );
+  if( strlen($node->title) > 55 ) {
+      $vars['article_title'] = substr($node->title, 0, 53) . "...";
+  }
+  else {
+    $vars['article_title'] = $node->title;    
+  }
+}
+
+/*
+ * render taxomony terms // maar alleen de 1e??
+ */
+function render_this_node_field($fieldname, $node) {
+  $field = field_get_items('node', $node, $fieldname);
+
+  foreach($field as $delta) {
+    
+    $fields[] = render($output = field_view_value('node', $node, $fieldname, $field[0]));
+
+  }
+  return implode(", ", $fields);
+}
+
+function render_this_node_link($content) {
+  $link = $content['field_link']['#items'][0];
+  $url = $link['url'];
+  $title = $link['title']; // lees meer
+  $attributes = NULL;
+  
+  foreach ($link['attributes'] as $key => $value) {
+  	$attributes .= "$key='$value' ";
+  } 
+  
+  $returnvalue = "<a href='$url' $attributes >$title</a>";
+  return $returnvalue;
+}
+
+function vacancies_render_fieldslist($fieldsarray, $node, $limit=0) {
+  $fields = array();
+  foreach ($fieldsarray as $fieldname) {
+    $field = field_get_items('node', $node, $fieldname);
+    if(is_array($field)) {
+        foreach ($field as $delta) {
+          $output = field_view_value('node', $node, $fieldname, $delta);
+          $fields[] = render($output);
+          if($fieldname == 'field_state') {
+            break; // this should work to only display the first state
+          }
+      }    
+    }
+    
+  }
+  
+  // check if limit is set and if fields are greater then the limit. if not skip this loop.
+  //$tempfields = array(); // reset and define to prevent notice $tempfields;
+  if($limit && count($fields) >= $limit) { 
+      for($i=0; $i < $limit; $i++) {
+          if($fields[$i]) {
+            $tempfields[] = $fields[$i];    
+          }
+      }
+      $fields = $tempfields;
+  }
+  
+  $renderdfields = implode(", ", $fields);
+  
+  return $renderdfields;
+}
+
+
+/**
+ * Implementation of hook_menu_alter()
+ */
+function vacancies_menu_alter(&$items){
+  //debug($items);
+//	$items['user']['menu_name'] = 'Navigation';
+	
+	return $items; 	 
+}
+
+function vacancies_stats_menu(){
+  $items = array();
+
+  // Test items
+  $items['manage_vacatures'] = array(
+      'title' => 'Vacatures beheren',
+      'description' => 'Eigen vacatures beheren',
+      'type' => MENU_NORMAL_ITEM,
+      'page callback' => 'click_stats_test_pager',
+      'access arguments' => array('access own click stats')
+  );   
+  
+  // needed for jQuery / ajax callback
+  // $items['click_stats/callback'] = array(
+  //   'title' => 'Test Pager Callback',
+  //   'type' => MENU_CALLBACK,
+  //   'page callback' => '_click_stats_test_pager_callback',
+  //   'access arguments' => array('access own click stats'),
+  // );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter()
+ * removes the kandidaat fields from user registration form
+ * removes the kandidaat fields from werkgever edit form
+ * BUG: field_functioncat wordt niet geladen bij user edit
+ */
+function vacancies_form_alter(&$form, &$form_state, $form_id) {
+  
+  if($form_id == 'user_profile_form' OR $form_id == 'user_register_form') {
+    // remove unnessesery werkgever fields
+    if( in_array('Werkgever', $form['#user']->roles) 
+        OR $form['#user']->uid == 0 
+      ) { // user role is werkgever
+      // alter form
+      unset($form['field_functioncat']);
+      unset($form['field_werkweek']);
+      unset($form['field_dienstverb']);
+      unset($form['field_management_experience']);
+      unset($form['field_cv']);
+      //debug($form)
+      return $form;
+    }
+    //if() // user role is werkgever
+
+  }
+}
+
+/**
+ * Implementation of hook_form_alter()
+ */
+// create sticky vacancies
+/*
+function vacancies_form_alter(&$form, &$form_state, $form_id) {
+    dsm($form_id);
+    // remove sticky field from default (option) location
+    unset($form['options']['sticky']);
+    
+    //create new sticky field
+    $form['sticky'] = array (
+        '#type' => 'checkbox',
+        '#title' => 'Top vacature',
+        '#default_value' => $form['#node']->sticky,
+        '#weight' => '-1',
+    );
+	
+	// $form['newitem'] = array (
+		// '#type' => 'checkbox',
+		// '#title' => 'test',
+		// '#default_value' => TRUE,
+		// '#weight' => '-2',
+	// );  
+}
+*/

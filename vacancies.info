@@ -1,0 +1,11 @@
+;Id$
+
+name = Vacancies
+description = display vacancies.
+package = jbbi
+core = 7.x
+files[] = vacancies.module
+files[] = vacancies.css
+files[] = color.js
+
+version = "7.x-1.0"

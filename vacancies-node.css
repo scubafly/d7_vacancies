@@ -1,0 +1,21 @@
+/* $id$ */
+
+.block-vacancies .content ul {
+  padding-left: 0; /* LTR */
+}
+.block-vacancies .content ul li {
+  margin-bottom: 10px;
+  list-style: none;
+}
+
+.block-vacancies .date {
+  font-weight: bold;
+}
+
+.block-vacancies .h2 {
+  margin: 0;
+}
+
+.block-vacancies .name {
+  font-style: italic;
+}

@@ -1,0 +1,23 @@
+h1.article-title > a:hover {
+	cursor: default;
+}
+
+section.field-name-field-bedrijfsnaam > ul.field-items > li.field-item > a {
+	line-height: 30px;
+}
+
+div#widgets-element-socialmedia_share-default {
+	margin-left: -4px;
+}
+
+.region-header{
+	margin-top:0px !important;
+}
+
+fieldset#edit-contact {
+	display:none;
+}
+
+fieldset#edit-timezone {
+	display:none;
+}
